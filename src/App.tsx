@@ -1,353 +1,354 @@
-import "./App.css";
-import { BrowserRouter as Router, Routes, Route, Link, Navigate } from "react-router-dom";
-import { Dashboard } from "./pages/dashboard";
-import { Auth } from "./pages/auth/indexAuth"; // Keep this import path
-import { FinancialRecordsProvider } from "./contexts/financial-record-context";
-import { AuthProvider, useAuth } from "./contexts/auth-context";
+import React, { useState } from "react";
+import { useFinancialRecords } from "../../contexts/financial-record-context";
 import { 
-  AppBar, 
-  Toolbar, 
-  Typography, 
-  Container, 
-  CssBaseline, 
-  ThemeProvider, 
-  createTheme,
+  TextField, 
+  Button, 
+  Grid, 
+  MenuItem, 
+  InputAdornment,
+  FormControl,
+  InputLabel,
+  Select,
   Box,
-  Button,
-  IconButton,
-  Menu,
-  MenuItem,
-  Avatar,
-  Drawer,
-  List,
-  ListItem,
-  ListItemIcon,
-  ListItemText,
   Divider,
-  useMediaQuery
+  Typography
 } from "@mui/material";
-import AccountBalanceWalletIcon from "@mui/icons-material/AccountBalanceWallet";
-import DashboardIcon from "@mui/icons-material/Dashboard";
-import LogoutIcon from "@mui/icons-material/Logout";
-import MenuIcon from "@mui/icons-material/Menu";
-import PersonIcon from "@mui/icons-material/Person";
-import { useState } from "react";
+import AttachMoneyIcon from "@mui/icons-material/AttachMoney";
+import AddCircleOutlineIcon from "@mui/icons-material/AddCircleOutline";
+import CalendarTodayIcon from "@mui/icons-material/CalendarToday";
+import DescriptionIcon from "@mui/icons-material/Description";
+import CategoryIcon from "@mui/icons-material/Category";
+import PaymentIcon from "@mui/icons-material/Payment";
 
-// Create a theme
-const theme = createTheme({
-  palette: {
-    primary: {
-      main: '#3498db',
-      light: '#5dade2',
-      dark: '#2980b9',
-      contrastText: '#ffffff',
-    },
-    secondary: {
-      main: '#2ecc71',
-      light: '#55d98d',
-      dark: '#27ae60',
-      contrastText: '#ffffff',
-    },
-    background: {
-      default: '#f5f5f5',
-    },
-    error: {
-      main: '#e74c3c',
-    },
-    warning: {
-      main: '#f39c12',
-    },
-    info: {
-      main: '#3498db',
-    },
-    success: {
-      main: '#2ecc71',
-    },
-  },
-  typography: {
-    fontFamily: '"Roboto", "Helvetica", "Arial", sans-serif',
-    h4: {
-      fontWeight: 600,
-    },
-    h5: {
-      fontWeight: 600,
-    },
-    h6: {
-      fontWeight: 600,
-    },
-    button: {
-      textTransform: 'none',
-      fontWeight: 500,
-    },
-  },
-  components: {
-    MuiButton: {
-      styleOverrides: {
-        root: {
-          borderRadius: 8,
-          padding: '8px 16px',
-        },
-        contained: {
-          boxShadow: '0 4px 6px rgba(50, 50, 93, 0.11), 0 1px 3px rgba(0, 0, 0, 0.08)',
-          '&:hover': {
-            boxShadow: '0 7px 14px rgba(50, 50, 93, 0.1), 0 3px 6px rgba(0, 0, 0, 0.08)',
-          },
-        },
-      },
-    },
-    MuiPaper: {
-      styleOverrides: {
-        rounded: {
-          borderRadius: 12,
-        },
-        elevation1: {
-          boxShadow: '0 4px 6px rgba(50, 50, 93, 0.11), 0 1px 3px rgba(0, 0, 0, 0.08)',
-        },
-        elevation2: {
-          boxShadow: '0 7px 14px rgba(50, 50, 93, 0.1), 0 3px 6px rgba(0, 0, 0, 0.08)',
-        },
-      },
-    },
-    MuiCard: {
-      styleOverrides: {
-        root: {
-          borderRadius: 12,
-          boxShadow: '0 4px 6px rgba(50, 50, 93, 0.11), 0 1px 3px rgba(0, 0, 0, 0.08)',
-        },
-      },
-    },
-    MuiAppBar: {
-      styleOverrides: {
-        root: {
-          boxShadow: '0 4px 6px rgba(50, 50, 93, 0.11), 0 1px 3px rgba(0, 0, 0, 0.08)',
-        },
-      },
-    },
-  },
-});
+export const FinancialRecordForm = () => {
+  const { addRecord } = useFinancialRecords();
+  
+  const [formData, setFormData] = useState({
+    date: new Date().toISOString().split("T")[0],
+    description: "",
+    amount: 0,
+    category: "",
+    paymentMethod: "Cash" // Default payment method
+  });
 
-// Protected route component
-const ProtectedRoute = ({ children }: { children: JSX.Element }) => {
-  const { isAuthenticated } = useAuth();
-  
-  if (!isAuthenticated) {
-    return <Navigate to="/auth" replace />;
-  }
-  
-  return children;
-};
-
-// Navigation component with user menu
-const Navigation = () => {
-  const { user, logout, isAuthenticated } = useAuth();
-  const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
-  const [drawerOpen, setDrawerOpen] = useState(false);
-  const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
-  
-  const handleMenu = (event: React.MouseEvent<HTMLElement>) => {
-    setAnchorEl(event.currentTarget);
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | { name?: string; value: unknown }>) => {
+    const { name, value } = e.target as { name: string; value: unknown };
+    setFormData({
+      ...formData,
+      [name]: name === "amount" ? parseFloat(value as string) : value,
+    });
   };
 
-  const handleClose = () => {
-    setAnchorEl(null);
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    await addRecord({
+      date: new Date(formData.date),
+      description: formData.description,
+      amount: formData.amount,
+      category: formData.category,
+      paymentMethod: formData.paymentMethod
+    });
+    
+    // Reset form
+    setFormData({
+      date: new Date().toISOString().split("T")[0],
+      description: "",
+      amount: 0,
+      category: "",
+      paymentMethod: "Cash"
+    });
   };
-  
-  const handleLogout = () => {
-    logout();
-    handleClose();
-    setDrawerOpen(false);
-  };
-  
-  const toggleDrawer = (open: boolean) => (event: React.KeyboardEvent | React.MouseEvent) => {
-    if (
-      event.type === 'keydown' &&
-      ((event as React.KeyboardEvent).key === 'Tab' ||
-        (event as React.KeyboardEvent).key === 'Shift')
-    ) {
-      return;
-    }
-    setDrawerOpen(open);
-  };
-  
+
+  // Predefined categories for financial records
+  const categories = [
+    "Food & Dining",
+    "Shopping",
+    "Housing",
+    "Transportation",
+    "Entertainment",
+    "Healthcare",
+    "Personal Care",
+    "Education",
+    "Travel",
+    "Gifts & Donations",
+    "Investments",
+    "Income",
+    "Other"
+  ];
+
+  // Payment methods
+  const paymentMethods = [
+    "Cash",
+    "Credit Card",
+    "Debit Card",
+    "Bank Transfer",
+    "Mobile Payment",
+    "Check",
+    "Other"
+  ];
+
   return (
-    <>
-      <AppBar position="static" color="primary" elevation={0}>
-        <Toolbar>
-          {isAuthenticated && isMobile && (
-            <IconButton
-              color="inherit"
-              aria-label="open drawer"
-              edge="start"
-              onClick={toggleDrawer(true)}
-              sx={{ mr: 2 }}
-            >
-              <MenuIcon />
-            </IconButton>
-          )}
-          
-          <AccountBalanceWalletIcon sx={{ mr: 2 }} />
-          <Typography variant="h6" component="div" sx={{ flexGrow: 1 }}>
-            Finance Tracker
-          </Typography>
-          
-          {isAuthenticated && !isMobile && (
-            <Button 
-              color="inherit" 
-              component={Link} 
-              to="/"
-              startIcon={<DashboardIcon />}
-              sx={{ mr: 2 }}
-            >
-              Dashboard
-            </Button>
-          )}
-          
-          {isAuthenticated ? (
-            <Box sx={{ display: 'flex', alignItems: 'center' }}>
-              <Typography variant="body2" sx={{ mr: 2, display: { xs: 'none', sm: 'block' } }}>
-                {user?.username}
-              </Typography>
-              <IconButton
-                size="large"
-                aria-label="account of current user"
-                aria-controls="menu-appbar"
-                aria-haspopup="true"
-                onClick={handleMenu}
-                color="inherit"
-              >
-                <Avatar sx={{ width: 32, height: 32, bgcolor: '#2980b9' }}>
-                  {user?.username?.charAt(0).toUpperCase() || 'U'}
-                </Avatar>
-              </IconButton>
-              <Menu
-                id="menu-appbar"
-                anchorEl={anchorEl}
-                anchorOrigin={{
-                  vertical: 'bottom',
-                  horizontal: 'right',
-                }}
-                keepMounted
-                transformOrigin={{
-                  vertical: 'top',
-                  horizontal: 'right',
-                }}
-                open={Boolean(anchorEl)}
-                onClose={handleClose}
-              >
-                <MenuItem disabled>
-                  <Typography variant="body2" color="textSecondary">
-                    Signed in as <strong>{user?.username}</strong>
-                  </Typography>
-                </MenuItem>
-                <Divider />
-                <MenuItem onClick={handleLogout}>
-                  <ListItemIcon>
-                    <LogoutIcon fontSize="small" />
-                  </ListItemIcon>
-                  <ListItemText>Logout</ListItemText>
-                </MenuItem>
-              </Menu>
-            </Box>
-          ) : (
-            <Button 
-              color="inherit" 
-              component={Link} 
-              to="/auth"
-              variant="outlined"
-              sx={{ 
-                borderColor: 'rgba(255,255,255,0.5)', 
-                '&:hover': { borderColor: 'white', bgcolor: 'rgba(255,255,255,0.1)' } 
+    <Box component="form" onSubmit={handleSubmit} sx={{ mt: 2 }}>
+      <Grid container spacing={2}>
+        <Grid item xs={12}>
+          <TextField
+            fullWidth
+            label="Date"
+            type="date"
+            name="date"
+            value={formData.date}
+            onChange={handleChange}
+            InputLabelProps={{ shrink: true }}
+            required
+            InputProps={{
+              startAdornment: (
+                <InputAdornment position="start">
+                  <CalendarTodayIcon />
+                </InputAdornment>
+              ),
+            }}
+            sx={{
+              '& .MuiOutlinedInput-root': {
+                borderRadius: 2,
+                '&:hover fieldset': {
+                  borderColor: '#3498db',
+                },
+              },
+            }}
+          />
+        </Grid>
+        
+        <Grid item xs={12}>
+          <TextField
+            fullWidth
+            label="Description"
+            name="description"
+            value={formData.description}
+            onChange={handleChange}
+            placeholder="What was this transaction for?"
+            required
+            InputProps={{
+              startAdornment: (
+                <InputAdornment position="start">
+                  <DescriptionIcon />
+                </InputAdornment>
+              ),
+            }}
+            sx={{
+              '& .MuiOutlinedInput-root': {
+                borderRadius: 2,
+                '&:hover fieldset': {
+                  borderColor: '#3498db',
+                },
+              },
+            }}
+          />
+        </Grid>
+        
+        <Grid item xs={12} sm={6}>
+          <TextField
+            fullWidth
+            label="Amount"
+            name="amount"
+            type="number"
+            value={formData.amount}
+            onChange={handleChange}
+            InputProps={{
+              startAdornment: (
+                <InputAdornment position="start">
+                  <AttachMoneyIcon />
+                </InputAdornment>
+              ),
+            }}
+            helperText="Use negative values for expenses"
+            required
+            sx={{
+              '& .MuiOutlinedInput-root': {
+                borderRadius: 2,
+                '&:hover fieldset': {
+                  borderColor: '#3498db',
+                },
+              },
+            }}
+          />
+        </Grid>
+        
+        <Grid item xs={12} sm={6}>
+          <FormControl fullWidth required sx={{
+            '& .MuiOutlinedInput-root': {
+              borderRadius: 2,
+              '&:hover fieldset': {
+                borderColor: '#3498db',
+              },
+            },
+            minWidth: 200 // Adjust the minimum width
+          }}>
+            <InputLabel id="payment-method-label">Payment Method</InputLabel>
+            <Select
+              labelId="payment-method-label"
+              name="paymentMethod"
+              value={formData.paymentMethod}
+              label="Payment Method"
+              onChange={handleChange}
+              MenuProps={{
+                PaperProps: {
+                  style: {
+                    maxHeight: 300
+                  },
+                },
               }}
+              sx={{
+                '& .MuiSelect-select': {
+                  paddingRight: '32px'
+                }
+              }}
+              startAdornment={
+                <InputAdornment position="start">
+                  <PaymentIcon />
+                </InputAdornment>
+              }
             >
-              Login
-            </Button>
-          )}
-        </Toolbar>
-      </AppBar>
-      
-      {/* Mobile Drawer */}
-      <Drawer
-        anchor="left"
-        open={drawerOpen}
-        onClose={toggleDrawer(false)}
-      >
-        <Box
-          sx={{ width: 250 }}
-          role="presentation"
-          onClick={toggleDrawer(false)}
-          onKeyDown={toggleDrawer(false)}
-        >
-          <Box sx={{ p: 2, display: 'flex', alignItems: 'center', bgcolor: '#3498db', color: 'white' }}>
-            <AccountBalanceWalletIcon sx={{ mr: 2 }} />
-            <Typography variant="h6">Finance Tracker</Typography>
-          </Box>
-          <Divider />
-          <List>
-            <ListItem button component={Link} to="/">
-              <ListItemIcon>
-                <DashboardIcon />
-              </ListItemIcon>
-              <ListItemText primary="Dashboard" />
-            </ListItem>
-          </List>
-          <Divider />
-          <List>
-            <ListItem button onClick={handleLogout}>
-              <ListItemIcon>
-                <LogoutIcon />
-              </ListItemIcon>
-              <ListItemText primary="Logout" />
-            </ListItem>
-          </List>
-        </Box>
-      </Drawer>
-    </>
+              {paymentMethods.map((method) => (
+                <MenuItem key={method} value={method}>
+                  {method}
+                </MenuItem>
+              ))}
+            </Select>
+          </FormControl>
+        </Grid>
+        
+        <Grid item xs={12} sm={6}>
+          <FormControl fullWidth required sx={{
+            '& .MuiOutlinedInput-root': {
+              borderRadius: 2,
+              '&:hover fieldset': {
+                borderColor: '#3498db',
+              },
+            },
+          }}>
+            <InputLabel id="category-label">Category</InputLabel>
+            <Select
+              labelId="category-label"
+              name="category"
+              value={formData.category}
+              label="Category"
+              onChange={handleChange}
+              displayEmpty
+              MenuProps={{
+                PaperProps: {
+                  style: {
+                    maxHeight: 300
+                  },
+                },
+              }}
+              sx={{
+                '& .MuiSelect-select': {
+                  paddingRight: '32px'
+                }
+              }}
+              startAdornment={
+                <InputAdornment position="start">
+                  <CategoryIcon />
+                </InputAdornment>
+              }
+            >
+              <MenuItem value="" disabled>
+                <Typography color="text.secondary">Select Category</Typography>
+              </MenuItem>
+              {categories.map((category) => (
+                <MenuItem key={category} value={category}>
+                  {category}
+                </MenuItem>
+              ))}
+            </Select>
+          </FormControl>
+        </Grid>
+
+        <Grid item xs={12}>
+          <Divider sx={{ my: 1 }} />
+        </Grid>
+
+        <Grid item xs={12}>
+          <Button
+            type="submit"
+            variant="contained"
+            fullWidth
+            startIcon={<AddCircleOutlineIcon />}
+            sx={{ 
+              mt: 1, 
+              bgcolor: '#3498db', 
+              '&:hover': { bgcolor: '#2980b9' },
+              py: 1.5,
+              borderRadius: 2,
+              textTransform: 'none',
+              fontWeight: 'bold',
+              fontSize: '1rem'
+            }}
+          >
+            Add Transaction
+          </Button>
+        </Grid>
+      </Grid>
+    </Box>
   );
 };
 
-function AppContent() {
-  return (
-    <Router>
-      <Box sx={{ display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
-        <Navigation />
-        
-        <Box sx={{ flexGrow: 1 }}>
-          <Routes>
-            <Route
-              path="/"
-              element={
-                <ProtectedRoute>
-                  <FinancialRecordsProvider>
-                    <Dashboard />
-                  </FinancialRecordsProvider>
-                </ProtectedRoute>
-              }
-            />
-            <Route path="/auth" element={<Auth />} />
-          </Routes>
-        </Box>
-        
-        <Box component="footer" sx={{ py: 3, px: 2, mt: 'auto', bgcolor: '#f8f9fa', borderTop: '1px solid #e9ecef' }}>
-          <Container maxWidth="sm">
-            <Typography variant="body2" color="text.secondary" align="center">
-              © {new Date().getFullYear()} Personal Finance Tracker
-            </Typography>
-          </Container>
-        </Box>
-      </Box>
-    </Router>
-  );
-}
+// Replace Grid with item prop
+// From:
+<Grid item xs={12}>
+  <TextField
+    fullWidth
+    label="Date"
+    type="date"
+    name="date"
+    value={formData.date}
+    onChange={handleChange}
+    InputLabelProps={{ shrink: true }}
+    required
+    InputProps={{
+      startAdornment: (
+        <InputAdornment position="start">
+          <CalendarTodayIcon />
+        </InputAdornment>
+      ),
+    }}
+    sx={{
+      '& .MuiOutlinedInput-root': {
+        borderRadius: 2,
+        '&:hover fieldset': {
+          borderColor: '#3498db',
+        },
+      },
+    }}
+  />
+</Grid>
 
-function App() {
-  return (
-    <ThemeProvider theme={theme}>
-      <CssBaseline />
-      <AuthProvider>
-        <AppContent />
-      </AuthProvider>
-    </ThemeProvider>
-  );
-}
-
-export default App;
+// To:
+<Grid xs={12}>
+  <TextField
+    fullWidth
+    label="Date"
+    type="date"
+    name="date"
+    value={formData.date}
+    onChange={handleChange}
+    InputLabelProps={{ shrink: true }}
+    required
+    InputProps={{
+      startAdornment: (
+        <InputAdornment position="start">
+          <CalendarTodayIcon />
+        </InputAdornment>
+      ),
+    }}
+    sx={{
+      '& .MuiOutlinedInput-root': {
+        borderRadius: 2,
+        '&:hover fieldset': {
+          borderColor: '#3498db',
+        },
+      },
+    }}
+  />
+</Grid>
