@@ -283,7 +283,17 @@ const Navigation = () => {
           </Box>
           <Divider />
           <List>
-            <ListItem button component={Link} to="/">
+            // Replace ListItem with button prop
+            // From:
+            <ListItem button component={Link} to="/dashboard">
+              <ListItemIcon>
+                <DashboardIcon />
+              </ListItemIcon>
+              <ListItemText primary="Dashboard" />
+            </ListItem>
+            
+            // To:
+            <ListItem component={Link} to="/dashboard">
               <ListItemIcon>
                 <DashboardIcon />
               </ListItemIcon>
@@ -292,7 +302,17 @@ const Navigation = () => {
           </List>
           <Divider />
           <List>
+            // Replace ListItem with button and onClick
+            // From:
             <ListItem button onClick={handleLogout}>
+              <ListItemIcon>
+                <LogoutIcon />
+              </ListItemIcon>
+              <ListItemText primary="Logout" />
+            </ListItem>
+            
+            // To:
+            <ListItem onClick={handleLogout}>
               <ListItemIcon>
                 <LogoutIcon />
               </ListItemIcon>
