@@ -71,14 +71,9 @@ export const Auth = () => {
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const { login, register, isAuthenticated } = useAuth();
   const navigate = useNavigate();
-  const theme = useTheme();
-
-  React.useEffect(() => {
-    if (isAuthenticated) {
-      navigate("/");
-    }
-  }, [isAuthenticated, navigate]);
-
+  // Remove unused theme variable or use it somewhere
+  
+  // Fix the unused event parameter
   const handleTabChange = (event: React.SyntheticEvent, newValue: number) => {
     setTabValue(newValue);
     setError(null);
